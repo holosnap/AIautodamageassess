@@ -1,0 +1,66 @@
+// Prisma schema for the vehicle damage report generator.
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ReportStatus {
+  PROCESSING
+  COMPLETE
+  FAILED
+}
+
+/// Mirrors the Clerk user identity. Rows are created/kept in sync via the
+/// Clerk webhook (src/app/api/webhooks/clerk/route.ts) and lazily upserted
+/// on first authenticated request as a fallback.
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reports Report[]
+}
+
+model Report {
+  id             String       @id @default(cuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  make           String?
+  model          String?
+  year           Int?
+  claimNumber    String?
+  dateOfIncident DateTime?
+  status         ReportStatus @default(PROCESSING)
+  /// Structured JSON produced by Claude (vehicle info, per-photo damage
+  /// observations, severity, affected components, hidden-damage flag).
+  analysis       Json?
+  errorMessage   String?
+  pdfS3Key       String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  images ReportImage[]
+
+  @@index([userId])
+  @@index([userId, claimNumber])
+}
+
+model ReportImage {
+  id        String   @id @default(cuid())
+  reportId  String
+  report    Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  s3Key     String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([reportId])
+}
