@@ -42,3 +42,6 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# local S3-compatible server data (npm run dev:s3)
+/.s3rver-data

@@ -9,6 +9,11 @@ const s3 = new S3Client({
     accessKeyId: env.AWS_ACCESS_KEY_ID,
     secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
   },
+  // Only set for local dev/testing against an S3-compatible server (s3rver,
+  // MinIO, LocalStack). Unset in production, which talks to real AWS.
+  ...(env.AWS_S3_ENDPOINT
+    ? { endpoint: env.AWS_S3_ENDPOINT, forcePathStyle: true }
+    : {}),
 });
 
 export async function uploadToS3(key: string, body: Buffer, contentType: string): Promise<void> {

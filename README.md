@@ -103,6 +103,28 @@ Visit http://localhost:3000, sign in, and create a report from
 
 No configuration is needed to switch between them.
 
+## Testing locally without real AWS credentials
+
+`npm run dev:s3` starts a local S3-compatible server ([s3rver](https://github.com/jamhall/s3rver))
+on `http://127.0.0.1:4569` with the dev bucket pre-created. Point the app at
+it by adding to `.env.local`:
+
+```bash
+AWS_ACCESS_KEY_ID="S3RVER"
+AWS_SECRET_ACCESS_KEY="S3RVER"
+S3_BUCKET_NAME="vehicle-damage-reports-dev"
+AWS_S3_ENDPOINT="http://127.0.0.1:4569"
+```
+
+`src/lib/s3.ts` only applies `AWS_S3_ENDPOINT` when it's set, so leaving it
+unset (the normal case) talks to real AWS exactly as before. This has been
+exercised end-to-end (upload → presigned URL → download round-trip, and the
+full report pipeline writing images and the generated PDF).
+
+Clerk and Anthropic still require real accounts — there's no local
+substitute for either, since Clerk needs to issue real signed-in sessions and
+Anthropic's vision analysis needs a real model call.
+
 ## Project structure
 
 ```
